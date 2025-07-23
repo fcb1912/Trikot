@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trikotbestellung</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 320px;
+      margin: 30px auto;
+      padding: 20px;
+      background: #fff;
+      border: 2px solid #c00;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(200,0,0,0.2);
+    }
+
+    h2 {
+      color: #c00;
+      text-align: center;
+      font-size: 1.8em;
+    }
+
+    label {
+      font-weight: bold;
+      color: #c00;
+    }
+
+    select, input[type="text"], button {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0 14px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1rem;
+      max-width: 300px;
+      margin-left: auto;
+      margin-right: auto;
+      display: block;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    button {
+      background-color: #c00;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #a00;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        margin: 10px;
+        padding: 15px;
+        border: none;
+        box-shadow: none;
+      }
+
+      h2 {
+        font-size: 1.4em;
+      }
+
+      select, input[type="text"], button {
+        font-size: 1.1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h2>FC Badenia St. Ilgen Trikotbestellung</h2>
+
+  <form id="jerseyForm">
+    <label for="firstname">Vorname:</label>
+    <input type="text" name="firstname" required>
+
+    <label for="lastname">Nachname:</label>
+    <input type="text" name="lastname" required>
+
+    <label for="group">Kategorie:</label>
+    <select name="group" id="groupSelect" required>
+      <option value="">-- bitte auswählen --</option>
+      <option value="Kinder">Kinder</option>
+      <option value="Erwachsene">Erwachsene</option>
+    </select>
+
+    <label for="size">Größe:</label>
+    <select name="size" id="sizeSelect" required>
+      <option value="">-- bitte zuerst Kategorie wählen --</option>
+    </select>
+
+    <label for="price" class="hidden">Preis:</label>
+    <input type="text" id="priceField" name="price" readonly class="hidden">
+    <div id="priceInfo" class="hidden"></div>
+
+    <button type="submit">Bestellung abschicken</button>
+  </form>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const sizes = {
+        Kinder: ["116", "128", "140", "152", "164", "176"],
+        Erwachsene: ["S", "M", "L", "XL", "2XL", "3XL"]
+      };
+
+      const groupSelect = document.getElementById("groupSelect");
+      const sizeSelect = document.getElementById("sizeSelect");
+      const form = document.getElementById("jerseyForm");
+      const submitBtn = form.querySelector("button[type='submit']");
+      let sending = false;
+
+      groupSelect.addEventListener("change", () => {
+        const group = groupSelect.value;
+        sizeSelect.innerHTML = '<option value="">-- bitte auswählen --</option>';
+
+        if (group && sizes[group]) {
+          sizes[group].forEach(size => {
+            const option = document.createElement("option");
+            option.value = size;
+            option.textContent = size;
+            sizeSelect.appendChild(option);
+          });
+        }
+      });
+
+      form.addEventListener("submit", e => {
+        e.preventDefault();
+        if (sending) return;
+        sending = true;
+
+        const firstname = form.firstname.value.trim();
+        const lastname = form.lastname.value.trim();
+        const group = form.group.value;
+        const size = form.size.value;
+
+        if (!firstname || !lastname || !group || !size) {
+          alert("❌ Bitte fülle alle Felder vollständig aus, bevor du die Bestellung abschickst.");
+          sending = false;
+          return;
+        }
+
+        submitBtn.textContent = "Wird gesendet...";
+        submitBtn.disabled = true;
+
+        const formData = new FormData(form);
+        fetch("https://script.google.com/macros/s/AKfycbxeVn7Pgn8hZhg1yoQxxfoiVLtR5AfTy24284LbeVN-8o3k3A442Stpg0f4bbXCZRln/exec", {
+          method: "POST",
+          body: formData
+        })
+        .then(response => response.text())
+        .then(data => {
+          const confirmation = document.createElement("div");
+          confirmation.innerHTML = "✅ Danke für deine Bestellung!<br>Bitte im Voraus per PayPal oder<br>in bar bezahlen.";
+          confirmation.style.background = "#e0ffe0";
+          confirmation.style.border = "1px solid #0a0";
+          confirmation.style.padding = "10px";
+          confirmation.style.marginTop = "10px";
+          confirmation.style.borderRadius = "5px";
+
+          form.appendChild(confirmation);
+          form.reset();
+          sizeSelect.innerHTML = '<option value="">-- bitte zuerst Kategorie wählen --</option>';
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Bestellung abschicken";
+          sending = false;
+        });
+      });
+    });
+  </script>
+</body>
+</html>
